@@ -381,10 +381,126 @@
           Object.assign(DB, parsed);
         } else {
           // seed: two zones for demo
-          DB.zones.push({ id: "Z1", name: "Islamabad" });
-          DB.zones.push({ id: "Z2", name: "Karachi" });
-          DB.zones.push({ id: "Z3", name: "Lahore" });
-          DB.zones.push({ id: "Z4", name: "RawalPindi" });
+          DB.zones = [
+            { id: "Z1", name: "Islamabad" },
+            { id: "Z2", name: "Karachi" },
+            { id: "Z3", name: "Lahore" },
+            { id: "Z4", name: "Rawalpindi" },
+          ];
+
+          // Stations
+          DB.stations = [
+            { id: "ST1", name: "Margalla Station", jurisdiction: "Islamabad" },
+            { id: "ST2", name: "Clifton Station", jurisdiction: "Karachi" },
+            { id: "ST3", name: "Model Town Station", jurisdiction: "Lahore" },
+          ];
+
+          // Reporters
+          DB.reporters = [
+            {
+              name: "Ali Khan",
+              phone: "0300-1234567",
+              email: "ali@mail.com",
+              status: "Active",
+            },
+            {
+              name: "Sara Ahmed",
+              phone: "0312-9988776",
+              email: "sara@mail.com",
+              status: "Active",
+            },
+            {
+              name: "John Doe",
+              phone: "0321-5566778",
+              email: "john@mail.com",
+              status: "Active",
+            },
+          ];
+
+          // Cases
+          DB.cases = [
+            {
+              case_id: generateCaseID(),
+              name: "Missing Female — Ayesha B.",
+              age: 19,
+              gender: "Female",
+              last_seen_location: "F-10 Markaz",
+              last_seen_date: "2025-01-05",
+              last_seen_time: "18:30",
+              description: "Wearing black hoodie, blue jeans.",
+              zone: "Islamabad",
+              status: "Active",
+              created_at: new Date().toISOString(),
+            },
+            {
+              case_id: generateCaseID(),
+              name: "Missing Child — Ahmed Ali",
+              age: 12,
+              gender: "Male",
+              last_seen_location: "Clifton Beach",
+              last_seen_date: "2025-01-10",
+              last_seen_time: "15:10",
+              description: "Last seen near food stalls.",
+              zone: "Karachi",
+              status: "Found",
+              created_at: new Date().toISOString(),
+            },
+            {
+              case_id: generateCaseID(),
+              name: "Missing — Bilal M.",
+              age: 27,
+              gender: "Male",
+              last_seen_location: "Mall Road",
+              last_seen_date: "2025-01-02",
+              last_seen_time: "20:45",
+              description: "Wearing white shalwar kameez.",
+              zone: "Lahore",
+              status: "Active",
+              created_at: new Date().toISOString(),
+            },
+          ];
+
+          // Sightings
+          DB.sightings = [
+            {
+              id: "S-" + Date.now(),
+              case_id: DB.cases[0].case_id,
+              reporter: "Ali Khan",
+              location: "F-11 Park",
+              date: "2025-01-06",
+              time: "17:40",
+              description: "Someone resembling missing person spotted.",
+              status: "Reported",
+            },
+          ];
+
+          // Suspects
+          DB.suspects = [
+            {
+              name: "Unknown Male — Hoodie",
+              risk: "Medium",
+              status: "Under Watch",
+            },
+            { name: "Vehicle APQ-556", risk: "High", status: "Wanted" },
+          ];
+
+          // Incidents
+          DB.incidents = [
+            {
+              id: "INC-" + Date.now(),
+              type: "Suspicious Activity",
+              date: "2025-01-04",
+              location: "F-10 Park",
+              status: "Under Investigation",
+            },
+            {
+              id: "INC-" + (Date.now() - 5000),
+              type: "Attempted Abduction",
+              date: "2025-01-07",
+              location: "Clifton Block 5",
+              status: "Closed",
+            },
+          ];
 
           saveDB();
         }
