@@ -16,8 +16,14 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <header>
+      <button id="sidebarToggle" class="sidebar-toggle">☰</button>
+
+      <h2 class="header-txt">Police Department</h2>
+    </header>
+
     <div class="app">
-      <aside class="sidebar">
+      <aside class="sidebar collapsed">
         <div class="logo">
           <div class="mark">PD</div>
           <div>
@@ -222,10 +228,7 @@
 
             <div id="view-incidents" style="display: none">
               <h3>Crime Incidents</h3>
-              <div class="muted">
-                (This UI is stubbed for frontend; attach evidence files and link
-                to suspects / cases in backend later.)
-              </div>
+              <div class="muted">Work in progress here</div>
               <table id="incidentsTable">
                 <thead>
                   <tr>
@@ -378,8 +381,11 @@
           Object.assign(DB, parsed);
         } else {
           // seed: two zones for demo
-          DB.zones.push({ id: "Z1", name: "Central" });
-          DB.zones.push({ id: "Z2", name: "Northside" });
+          DB.zones.push({ id: "Z1", name: "Islamabad" });
+          DB.zones.push({ id: "Z2", name: "Karachi" });
+          DB.zones.push({ id: "Z3", name: "Lahore" });
+          DB.zones.push({ id: "Z4", name: "RawalPindi" });
+
           saveDB();
         }
       }
@@ -388,7 +394,7 @@
       function generateCaseID() {
         const t = Date.now().toString(36).toUpperCase();
         const r = Math.floor(Math.random() * 900 + 100);
-        return `MP-${t}-${r}`;
+        return `PD-${t}-${r}`;
       }
 
       /* ---------- UI helpers ---------- */
@@ -903,6 +909,13 @@
       // small helper to open quick register from modal demo
       document.getElementById("roleSelect").addEventListener("change", (e) => {
         /* UI could change by role in the future */
+      });
+
+      const sidebar = document.querySelector(".sidebar");
+      const toggleBtn = document.getElementById("sidebarToggle");
+
+      toggleBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("collapsed");
       });
     </script>
   </body>
