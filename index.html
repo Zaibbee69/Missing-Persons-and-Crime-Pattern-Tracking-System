@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Missing Persons Management — Frontend (Dark / Grime)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="logo">
+          <div class="mark">PD</div>
+          <div>
+            <div style="font-weight: 700">Crime Management</div>
+            <div class="small">No Crime Goes Unnoticed</div>
+          </div>
+        </div>
+        <nav class="nav">
+          <button class="active" data-view="dashboard">Dashboard</button>
+          <button data-view="register">Register Missing</button>
+          <button data-view="sightings">Sightings</button>
+          <button data-view="incidents">Crime Incidents</button>
+          <button data-view="reporters">Reporters</button>
+          <button data-view="suspects">Suspects</button>
+          <button data-view="zones">Zones</button>
+          <button data-view="stations">Stations</button>
+        </nav>
+        <div style="margin-top: 18px">
+          <div class="small">Role</div>
+          <select
+            id="roleSelect"
+            style="
+              width: 100%;
+              margin-top: 8px;
+              padding: 8px;
+              border-radius: 8px;
+              color: #fff;
+              background-color: #5a0f12;
+              border: 1px solid rgba(255, 255, 255, 0.04);
+            "
+          >
+            <option>Admin</option>
+            <option>Police</option>
+            <option>Analyst</option>
+            <option>Reporter</option>
+          </select>
+        </div>
+      </aside>
+
+      <main class="content">
+        <div class="topbar">
+          <div style="display: flex; align-items: center">
+            <h2 style="margin: 0">Dashboard</h2>
+            <div class="search" style="max-width: 520px; margin-left: 14px">
+              <input id="globalSearch" placeholder="Search anything..." />
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center">
+            <button class="btn" id="exportBtn">Export CSV</button>
+            <div style="text-align: right">
+              <div class="small">Signed in as</div>
+              <div style="font-weight: 700">Officer_01</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-row">
+          <div class="card">
+            <h3>Active Cases</h3>
+            <p id="statActive">0</p>
+          </div>
+          <div class="card">
+            <h3>Found</h3>
+            <p id="statFound">0</p>
+          </div>
+          <div class="card">
+            <h3>Unresolved</h3>
+            <p id="statOpen">0</p>
+          </div>
+        </div>
+
+        <div class="main-grid">
+          <section class="panel" id="panelLeft">
+            <!-- dashboard / tables will be toggled -->
+
+            <div id="view-dashboard">
+              <h3 style="margin-top: 0">Recent Cases</h3>
+              <div style="overflow: auto; max-height: 320px">
+                <table id="casesTable">
+                  <thead>
+                    <tr>
+                      <th>Case ID</th>
+                      <th>Name</th>
+                      <th>Last Seen</th>
+                      <th>Status</th>
+                      <th>Zone</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="view-register" style="display: none">
+              <h3>Register Missing Person</h3>
+              <form id="registerForm">
+                <div class="form-grid">
+                  <div>
+                    <label>Full Name</label>
+                    <input required type="text" id="rp_name" />
+                  </div>
+                  <div>
+                    <label>Age</label>
+                    <input type="text" id="rp_age" />
+                  </div>
+                  <div>
+                    <label>Gender</label>
+                    <select id="rp_gender">
+                      <option>Male</option>
+                      <option>Female</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Last Seen Location</label>
+                    <input type="text" id="rp_location" />
+                  </div>
+                  <div>
+                    <label>Last Seen Date</label>
+                    <input type="date" id="rp_date" />
+                  </div>
+                  <div>
+                    <label>Last Seen Time</label>
+                    <input type="time" id="rp_time" />
+                  </div>
+                  <div style="grid-column: 1/3">
+                    <label>Description</label>
+                    <textarea id="rp_description"></textarea>
+                  </div>
+                  <div>
+                    <label>Zone</label>
+                    <select id="rp_zone"></select>
+                  </div>
+                  <div>
+                    <label>Attach Photo</label>
+                    <input type="file" id="rp_photo" accept="image/*" />
+                    <div class="file-preview" id="photoPreview"></div>
+                  </div>
+                  <div
+                    style="grid-column: 1/3; text-align: right; margin-top: 8px"
+                  >
+                    <button class="btn" type="submit">Create Case</button>
+                    <button type="button" class="btn ghost" id="clearForm">
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <div id="view-sightings" style="display: none">
+              <h3>Report Sighting</h3>
+              <form id="sightingForm">
+                <div class="form-grid">
+                  <div>
+                    <label>Case ID (or select)</label>
+                    <select id="sighting_case"></select>
+                  </div>
+                  <div>
+                    <label>Reporter Name</label>
+                    <input type="text" id="sighting_reporter" />
+                  </div>
+                  <div>
+                    <label>Location</label>
+                    <input type="text" id="sighting_location" />
+                  </div>
+                  <div>
+                    <label>Date</label>
+                    <input type="date" id="sighting_date" />
+                  </div>
+                  <div>
+                    <label>Time</label>
+                    <input type="time" id="sighting_time" />
+                  </div>
+                  <div style="grid-column: 1/3">
+                    <label>Description</label>
+                    <textarea id="sighting_desc"></textarea>
+                  </div>
+                  <div style="grid-column: 1/3; text-align: right">
+                    <button class="btn" type="submit">Submit Sighting</button>
+                  </div>
+                </div>
+              </form>
+
+              <h4 style="margin-top: 12px">Sightings (recent)</h4>
+              <div style="max-height: 180px; overflow: auto">
+                <table id="sightingsTable">
+                  <thead>
+                    <tr>
+                      <th>Case ID</th>
+                      <th>Date</th>
+                      <th>Location</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="view-incidents" style="display: none">
+              <h3>Crime Incidents</h3>
+              <div class="muted">
+                (This UI is stubbed for frontend; attach evidence files and link
+                to suspects / cases in backend later.)
+              </div>
+              <table id="incidentsTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </section>
+
+          <aside class="panel" id="panelRight">
+            <div id="view-analytics">
+              <h3 style="margin-top: 0">Analytics</h3>
+              <div style="display: flex; gap: 12px; margin-bottom: 12px">
+                <div style="flex: 1">
+                  <div class="chart-wrap">
+                    <canvas id="statusChart"></canvas>
+                  </div>
+                </div>
+                <div style="flex: 1">
+                  <div class="chart-wrap"><canvas id="zoneChart"></canvas></div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center">
+                <button class="btn" id="openRegister">Quick Register</button>
+                <button class="btn ghost" id="openSighting">
+                  Quick Sighting
+                </button>
+              </div>
+            </div>
+
+            <div id="view-reporters" style="display: none">
+              <h3>Reporters</h3>
+              <table id="reportersTable">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div id="view-suspects" style="display: none">
+              <h3>Suspects</h3>
+              <table id="suspectsTable">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Risk</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div id="view-zones" style="display: none">
+              <h3>City Zones</h3>
+              <div style="display: flex; gap: 8px; margin-bottom: 8px">
+                <input
+                  id="newZoneName"
+                  placeholder="Zone name"
+                  style="
+                    flex: 1;
+                    padding: 8px;
+                    border-radius: 8px;
+                    background: transparent;
+                    color: #fff;
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                  "
+                /><button class="btn" id="addZoneBtn">Add Zone</button>
+              </div>
+              <table id="zonesTable">
+                <thead>
+                  <tr>
+                    <th>Zone</th>
+                    <th>Cases</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div id="view-stations" style="display: none">
+              <h3>Police Stations</h3>
+              <div style="display: flex; gap: 8px; margin-bottom: 8px">
+                <input
+                  id="newStationName"
+                  placeholder="Station name"
+                  style="
+                    flex: 1;
+                    padding: 8px;
+                    border-radius: 8px;
+                    background: transparent;
+                    color: #fff;
+                    border: 1px solid rgba(255, 255, 255, 0.04);
+                  "
+                /><button class="btn" id="addStationBtn">Add</button>
+              </div>
+              <table id="stationsTable">
+                <thead>
+                  <tr>
+                    <th>Station</th>
+                    <th>Jurisdiction</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </aside>
+        </div>
+
+        <footer>
+          Prototype frontend — drop this file into XAMPP (htdocs) to test
+          locally. I will help convert forms to PHP endpoints when you want.
+        </footer>
+      </main>
+    </div>
+
+    <!-- modal container used for quick register/sighting -->
+    <div class="modal" id="modalRoot">
+      <div class="dialog" id="modalDialog"></div>
+    </div>
+
+    <script>
+      /* ---------- Local data model (localStorage-backed) ---------- */
+      const DB = {
+        cases: [],
+        sightings: [],
+        reporters: [],
+        incidents: [],
+        suspects: [],
+        zones: [],
+        stations: [],
+      };
+
+      function saveDB() {
+        localStorage.setItem("mp_db", JSON.stringify(DB));
+      }
+      function loadDB() {
+        const raw = localStorage.getItem("mp_db");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          Object.assign(DB, parsed);
+        } else {
+          // seed: two zones for demo
+          DB.zones.push({ id: "Z1", name: "Central" });
+          DB.zones.push({ id: "Z2", name: "Northside" });
+          saveDB();
+        }
+      }
+
+      // Unique Case ID generator
+      function generateCaseID() {
+        const t = Date.now().toString(36).toUpperCase();
+        const r = Math.floor(Math.random() * 900 + 100);
+        return `MP-${t}-${r}`;
+      }
+
+      /* ---------- UI helpers ---------- */
+      function $(s) {
+        return document.querySelector(s);
+      }
+      function $all(s) {
+        return Array.from(document.querySelectorAll(s));
+      }
+
+      // Toggle sidebar nav
+      $all(".nav button").forEach((btn) =>
+        btn.addEventListener("click", () => {
+          $all(".nav button").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          const view = btn.dataset.view;
+          showView(view);
+        })
+      );
+
+      function showView(view) {
+        // hide all views
+        const leftViews = ["dashboard", "register", "sightings", "incidents"];
+        const rightViews = [
+          "analytics",
+          "reporters",
+          "suspects",
+          "zones",
+          "stations",
+        ];
+        leftViews.forEach((v) => {
+          const el = $(`#view-${v}`);
+          if (el) el.style.display = v === view ? "block" : "none";
+        });
+        rightViews.forEach((v) => {
+          const el = $(`#view-${v}`);
+          if (el) el.style.display = v === view ? "block" : "none";
+        });
+        // if dashboard selected ensure analytics on right
+        if (
+          view === "dashboard" ||
+          view === "register" ||
+          view === "sightings"
+        ) {
+          $all("#panelRight > div").forEach(
+            (d) =>
+              (d.style.display = d.id === "view-analytics" ? "block" : "none")
+          );
+        }
+        // update header title
+        document.querySelector(".topbar h2").textContent =
+          view.charAt(0).toUpperCase() + view.slice(1);
+        refreshUI();
+      }
+
+      /* ---------- CRUD operations (local only) ---------- */
+      function createCase(data) {
+        const id = generateCaseID();
+        const item = Object.assign(
+          {
+            case_id: id,
+            status: "Active",
+            created_at: new Date().toISOString(),
+          },
+          data
+        );
+        DB.cases.unshift(item);
+        saveDB();
+        return item;
+      }
+
+      function createSighting(s) {
+        DB.sightings.unshift(s);
+        saveDB();
+      }
+
+      function updateCaseStatus(case_id, status, finalRemarks = "") {
+        const c = DB.cases.find((x) => x.case_id === case_id);
+        if (!c) return;
+        c.status = status;
+        c.finalRemarks = finalRemarks;
+        saveDB();
+      }
+
+      /* ---------- Rendering ---------- */
+      function refreshUI() {
+        renderCases();
+        renderStats();
+        renderSightingOptions();
+        renderSightings();
+        renderZonesList();
+        renderTables();
+        renderCharts();
+      }
+
+      function renderCases() {
+        const tbody = $("#casesTable tbody");
+        tbody.innerHTML = "";
+        DB.cases.forEach((c) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+        <td>${c.case_id}</td>
+        <td>${c.name || ""}</td>
+        <td>${c.last_seen_location || ""}</td>
+        <td><span class="badge ${statusClass(c.status)}">${c.status}</span></td>
+        <td>${c.zone || ""}</td>
+        <td class="table-actions">
+          <button class="btn ghost" data-action="view" data-id="${
+            c.case_id
+          }">View</button>
+          <button class="btn" data-action="status" data-id="${
+            c.case_id
+          }">Update</button>
+        </td>`;
+          tbody.appendChild(tr);
+        });
+        // attach action listeners
+        $all(".table-actions button").forEach((b) => {
+          b.onclick = () => {
+            const id = b.dataset.id;
+            const act = b.dataset.action;
+            if (act === "view") openModalCaseView(id);
+            else if (act === "status") openModalUpdateStatus(id);
+          };
+        });
+      }
+
+      function statusClass(s) {
+        if (!s) return "";
+        return s.toLowerCase() === "active"
+          ? "status-active"
+          : s.toLowerCase() === "found"
+          ? "status-found"
+          : s.toLowerCase() === "closed"
+          ? "status-closed"
+          : "status-deceased";
+      }
+
+      function renderStats() {
+        const totals = { Active: 0, Found: 0, Closed: 0, Deceased: 0 };
+        DB.cases.forEach((c) => {
+          totals[c.status] = (totals[c.status] || 0) + 1;
+        });
+        $("#statActive").textContent = totals.Active || 0;
+        $("#statFound").textContent = totals.Found || 0;
+        $("#statOpen").textContent =
+          DB.cases.length -
+            (totals.Found || 0) -
+            (totals.Closed || 0) -
+            (totals.Deceased || 0) || 0;
+      }
+
+      function renderSightingOptions() {
+        const sel = $("#sighting_case");
+        sel.innerHTML = "";
+        DB.cases.forEach((c) => {
+          const opt = document.createElement("option");
+          opt.value = c.case_id;
+          opt.textContent = `${c.case_id} — ${c.name}`;
+          sel.appendChild(opt);
+        });
+      }
+      function renderSightings() {
+        const tbody = $("#sightingsTable tbody");
+        tbody.innerHTML = "";
+        DB.sightings.forEach((s) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${s.case_id}</td><td>${s.date}</td><td>${
+            s.location
+          }</td><td>${
+            s.status || "Reported"
+          }</td><td><button class="btn" data-action="verify" data-id="${
+            s.id
+          }">Verify</button></td>`;
+          tbody.appendChild(tr);
+        });
+        $all("#sightingsTable button").forEach(
+          (b) =>
+            (b.onclick = () => {
+              const id = b.dataset.id;
+              openModalVerifySighting(id);
+            })
+        );
+      }
+
+      function renderZonesList() {
+        const sel = $("#rp_zone");
+        sel.innerHTML = "";
+        DB.zones.forEach((z) => {
+          const opt = document.createElement("option");
+          opt.value = z.name;
+          opt.textContent = z.name;
+          sel.appendChild(opt);
+        });
+        // zones table
+        const ztbody = $("#zonesTable tbody");
+        ztbody.innerHTML = "";
+        DB.zones.forEach((z) => {
+          const count = DB.cases.filter((c) => c.zone === z.name).length;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${z.name}</td><td>${count}</td>`;
+          ztbody.appendChild(tr);
+        });
+      }
+
+      function renderTables() {
+        // reporters
+        const rt = $("#reportersTable tbody");
+        rt.innerHTML = "";
+        DB.reporters.forEach((r) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${r.name}</td><td>${r.phone || ""}</td><td>${
+            r.email || ""
+          }</td><td>${r.status || "Active"}</td>`;
+          rt.appendChild(tr);
+        });
+        // suspects
+        const st = $("#suspectsTable tbody");
+        st.innerHTML = "";
+        DB.suspects.forEach((s) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${s.name}</td><td>${s.risk}</td><td>${s.status}</td>`;
+          st.appendChild(tr);
+        });
+        // incidents
+        const it = $("#incidentsTable tbody");
+        it.innerHTML = "";
+        DB.incidents.forEach((i) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${i.id}</td><td>${i.type}</td><td>${i.date}</td><td>${i.location}</td><td>${i.status}</td>`;
+          it.appendChild(tr);
+        });
+        // stations
+        const stt = $("#stationsTable tbody");
+        stt.innerHTML = "";
+        DB.stations.forEach((s) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${s.name}</td><td>${s.jurisdiction || ""}</td>`;
+          stt.appendChild(tr);
+        });
+      }
+
+      /* ---------- Charts ---------- */
+      let statusChart, zoneChart;
+      function renderCharts() {
+        const ctx1 = document.getElementById("statusChart").getContext("2d");
+        const statusCounts = { Active: 0, Found: 0, Closed: 0, Deceased: 0 };
+        DB.cases.forEach(
+          (c) => (statusCounts[c.status] = (statusCounts[c.status] || 0) + 1)
+        );
+        const statusData = [
+          statusCounts.Active || 0,
+          statusCounts.Found || 0,
+          statusCounts.Closed || 0,
+          statusCounts.Deceased || 0,
+        ];
+        if (statusChart)
+          (statusChart.data.datasets[0].data = statusData),
+            statusChart.update();
+        else
+          statusChart = new Chart(ctx1, {
+            type: "doughnut",
+            data: {
+              labels: ["Active", "Found", "Closed", "Deceased"],
+              datasets: [{ data: statusData }],
+            },
+            options: { plugins: { legend: { position: "bottom" } } },
+          });
+
+        const ctx2 = document.getElementById("zoneChart").getContext("2d");
+        const zoneLabels = DB.zones.map((z) => z.name);
+        const zoneCounts = zoneLabels.map(
+          (n) => DB.cases.filter((c) => c.zone === n).length
+        );
+        if (zoneChart)
+          (zoneChart.data.labels = zoneLabels),
+            (zoneChart.data.datasets[0].data = zoneCounts),
+            zoneChart.update();
+        else
+          zoneChart = new Chart(ctx2, {
+            type: "bar",
+            data: {
+              labels: zoneLabels,
+              datasets: [{ label: "Cases", data: zoneCounts }],
+            },
+            options: { plugins: { legend: { display: false } } },
+          });
+      }
+
+      /* ---------- Modals ---------- */
+      const modalRoot = $("#modalRoot");
+      const modalDialog = $("#modalDialog");
+      function openModal(html) {
+        modalDialog.innerHTML = html;
+        modalRoot.classList.add("open");
+      }
+      function closeModal() {
+        modalRoot.classList.remove("open");
+        modalDialog.innerHTML = "";
+      }
+      modalRoot.addEventListener("click", (e) => {
+        if (e.target === modalRoot) closeModal();
+      });
+
+      function openModalCaseView(case_id) {
+        const c = DB.cases.find((x) => x.case_id === case_id);
+        if (!c) return;
+        openModal(
+          `<h3>${c.name} — ${
+            c.case_id
+          }</h3><div style="display:flex;gap:12px"><div style="flex:1"><p><strong>Last seen:</strong> ${
+            c.last_seen_location
+          } — ${c.last_seen_date || ""} ${
+            c.last_seen_time || ""
+          }</p><p><strong>Description:</strong> ${
+            c.description || ""
+          }</p><p><strong>Status:</strong> ${
+            c.status
+          }</p></div><div style="width:220px;text-align:right"><button class="btn" id="modalClose">Close</button></div></div>`
+        );
+        $("#modalClose").onclick = closeModal;
+      }
+
+      function openModalUpdateStatus(case_id) {
+        openModal(
+          `<h3>Update Status — ${case_id}</h3><div style="display:flex;gap:10px"><select id="newStatus"><option>Active</option><option>Found</option><option>Closed</option><option>Deceased</option></select><input id="finalRemarks" placeholder="Final remarks (optional)" style="flex:1;padding:8px;border-radius:8px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.04)"/><div><button class="btn" id="applyStatus">Apply</button></div></div>`
+        );
+        $("#applyStatus").onclick = () => {
+          const s = $("#newStatus").value;
+          const r = $("#finalRemarks").value;
+          updateCaseStatus(case_id, s, r);
+          closeModal();
+          refreshUI();
+        };
+      }
+
+      function openModalVerifySighting(sightingId) {
+        const s = DB.sightings.find((x) => x.id === sightingId);
+        if (!s) return;
+        openModal(
+          `<h3>Verify Sighting</h3><div><p><strong>Case:</strong> ${
+            s.case_id
+          }</p><p><strong>Location:</strong> ${
+            s.location
+          }</p><p><strong>Date:</strong> ${s.date} ${s.time || ""}</p><p>${
+            s.description || ""
+          }</p><div style="display:flex;gap:8px;margin-top:12px"><button class="btn" id="verifyBtn">Verify</button><button class="btn ghost" id="rejectBtn">Reject</button></div></div>`
+        );
+        $("#verifyBtn").onclick = () => {
+          s.status = "Verified"; // update case last known location
+          const c = DB.cases.find((x) => x.case_id === s.case_id);
+          if (c) {
+            c.last_seen_location = s.location;
+            saveDB();
+          }
+          saveDB();
+          closeModal();
+          refreshUI();
+        };
+        $("#rejectBtn").onclick = () => {
+          s.status = "Rejected";
+          saveDB();
+          closeModal();
+          refreshUI();
+        };
+      }
+
+      /* ---------- Form handlers ---------- */
+      $("#registerForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const data = {
+          name: $("#rp_name").value,
+          age: $("#rp_age").value,
+          gender: $("#rp_gender").value,
+          last_seen_location: $("#rp_location").value,
+          last_seen_date: $("#rp_date").value,
+          last_seen_time: $("#rp_time").value,
+          description: $("#rp_description").value,
+          zone: $("#rp_zone").value,
+        };
+        const created = createCase(data);
+        // photo preview stored only client-side for prototype
+        if ($("#rp_photo").files.length) {
+          created.photoName = $("#rp_photo").files[0].name;
+        }
+        saveDB();
+        alert("Case created: " + created.case_id);
+        $("#registerForm").reset();
+        renderUIAfterCreate();
+      });
+
+      $("#rp_photo").addEventListener("change", () => {
+        const f = $("#rp_photo").files[0];
+        $("#photoPreview").textContent = f ? f.name : "";
+      });
+
+      function renderUIAfterCreate() {
+        refreshUI();
+        showView("dashboard");
+      }
+
+      $("#sightingForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const s = {
+          id: "S-" + Date.now(),
+          case_id: $("#sighting_case").value,
+          reporter: $("#sighting_reporter").value,
+          location: $("#sighting_location").value,
+          date: $("#sighting_date").value,
+          time: $("#sighting_time").value,
+          description: $("#sighting_desc").value,
+          status: "Reported",
+        };
+        createSighting(s);
+        alert("Sighting reported");
+        $("#sightingForm").reset();
+        refreshUI();
+      });
+
+      // quick modal triggers
+      $("#openRegister").addEventListener("click", () => {
+        showView("register");
+      });
+      $("#openSighting").addEventListener("click", () => {
+        showView("sightings");
+      });
+
+      // add zone
+      $("#addZoneBtn").addEventListener("click", () => {
+        const name = $("#newZoneName").value.trim();
+        if (!name) return alert("Enter zone name");
+        DB.zones.push({ id: "Z" + Date.now(), name });
+        saveDB();
+        $("#newZoneName").value = "";
+        refreshUI();
+      });
+
+      $("#addStationBtn").addEventListener("click", () => {
+        const name = $("#newStationName").value.trim();
+        if (!name) return alert("Enter station name");
+        DB.stations.push({ id: "ST" + Date.now(), name });
+        saveDB();
+        $("#newStationName").value = "";
+        refreshUI();
+      });
+
+      // search
+      $("#globalSearch").addEventListener("input", (e) => {
+        const q = e.target.value.toLowerCase();
+        const rows = $all("#casesTable tbody tr");
+        rows.forEach((r) => {
+          const txt = r.textContent.toLowerCase();
+          r.style.display = txt.includes(q) ? "table-row" : "none";
+        });
+      });
+
+      // export CSV
+      $("#exportBtn").addEventListener("click", () => {
+        const rows = [
+          ["Case ID", "Name", "Status", "Last Seen", "Zone", "Created"],
+        ].concat(
+          DB.cases.map((c) => [
+            c.case_id,
+            c.name,
+            c.status,
+            c.last_seen_location,
+            c.zone,
+            c.created_at,
+          ])
+        );
+        const csv = rows
+          .map((r) =>
+            r
+              .map((cell) => `"${(cell || "").toString().replace(/"/g, '""')}"`)
+              .join(",")
+          )
+          .join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "mp_cases.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      // modal shortcuts for register/sighting (for quick testing)
+      function quickRegisterModal() {
+        openModal(
+          `<h3>Quick Register</h3><div style="display:grid;gap:8px"><input id="q_name" placeholder="Full name" style="padding:8px;border-radius:8px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.04)"/><input id="q_loc" placeholder="Last seen location" style="padding:8px;border-radius:8px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.04)"/><div style="text-align:right"><button class="btn" id="q_create">Create</button></div></div>`
+        );
+        $("#q_create").onclick = () => {
+          const name = $("#q_name").value;
+          const loc = $("#q_loc").value;
+          if (!name) return alert("Enter name");
+          createCase({ name, last_seen_location: loc });
+          closeModal();
+          refreshUI();
+        };
+      }
+
+      // startup
+      loadDB();
+      refreshUI();
+      showView("dashboard");
+
+      // attach quick open modal events
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeModal();
+      });
+
+      // small helper to open quick register from modal demo
+      document.getElementById("roleSelect").addEventListener("change", (e) => {
+        /* UI could change by role in the future */
+      });
+    </script>
+  </body>
+</html>
