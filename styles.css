@@ -217,14 +217,16 @@ textarea {
     width: 100%;
     padding: 8px;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--maroon);
     background: transparent;
-    color: #fff;
+    color: var(--muted);
 }
 
-textarea {
-    min-height: 80px;
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
 }
+
 
 /* modal */
 .modal {
