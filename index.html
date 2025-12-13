@@ -18,6 +18,7 @@
   <body>
     <header class="glass">
       <button id="sidebarToggle" class="sidebar-toggle">☰</button>
+      <button id="logoutBtn" style="margin-top: 12px">Logout</button>
 
       <h2 class="header-txt">Police Department</h2>
     </header>
@@ -43,21 +44,17 @@
         </nav>
         <div style="margin-top: 18px">
           <div class="small">Role</div>
-          <select
-            id="roleSelect"
+          <div
             style="
-              width: 100%;
-              margin-top: 8px;
+              margin-top: 6px;
               padding: 8px;
               border-radius: 8px;
-              color: #fff;
-              background-color: #5a0f12;
-              border: 1px solid rgba(255, 255, 255, 0.04);
+              background: #3a0b0d;
+              font-weight: 600;
             "
           >
-            <option>Police</option>
-            <option>Reporter</option>
-          </select>
+            <span id="currentRole"></span>
+          </div>
         </div>
       </aside>
 
@@ -73,7 +70,7 @@
             <button class="btn" id="exportBtn">Export CSV</button>
             <div style="text-align: right">
               <div class="small">Signed in as</div>
-              <div style="font-weight: 700">Officer</div>
+              <div id="currentRoled" style="font-weight: 700">Officer</div>
             </div>
           </div>
         </div>
@@ -97,7 +94,7 @@
           <section class="panel" id="panelLeft">
             <!-- dashboard / tables will be toggled -->
 
-            <div id="view-dashboard">
+            <div id="view-dashboard" data-view-section="dashboard">
               <h3 style="margin-top: 0">Recent Cases</h3>
               <div style="overflow: auto; max-height: 320px">
                 <table id="casesTable">
@@ -116,7 +113,11 @@
               </div>
             </div>
 
-            <div id="view-register" style="display: none">
+            <div
+              id="view-register"
+              data-view-section="register"
+              style="display: none"
+            >
               <h3>Register Missing Person</h3>
               <form id="registerForm">
                 <div class="form-grid">
@@ -185,7 +186,11 @@
               </form>
             </div>
 
-            <div id="view-sightings" style="display: none">
+            <div
+              id="view-sightings"
+              data-view-section="sightings"
+              style="display: none"
+            >
               <h3>Report Sighting</h3>
               <form id="sightingForm">
                 <div class="form-grid">
@@ -252,7 +257,11 @@
               </div>
             </div>
 
-            <div id="view-incidents" style="display: none">
+            <div
+              id="view-incidents"
+              data-view-section="incidents"
+              style="display: none"
+            >
               <h3>Crime Incidents</h3>
               <div class="muted">Work in progress here</div>
               <table id="incidentsTable">
@@ -291,7 +300,11 @@
               </div>
             </div>
 
-            <div id="view-reporters" style="display: none">
+            <div
+              id="view-reporters"
+              data-view-section="reporters"
+              style="display: none"
+            >
               <h3>Reporters</h3>
               <table id="reportersTable">
                 <thead>
@@ -306,7 +319,11 @@
               </table>
             </div>
 
-            <div id="view-suspects" style="display: none">
+            <div
+              id="view-suspects"
+              data-view-section="suspects"
+              style="display: none"
+            >
               <h3>Suspects</h3>
               <table id="suspectsTable">
                 <thead>
@@ -320,7 +337,11 @@
               </table>
             </div>
 
-            <div id="view-zones" style="display: none">
+            <div
+              id="view-zones"
+              data-view-section="zones"
+              style="display: none"
+            >
               <h3>City Zones</h3>
               <div style="display: flex; gap: 8px; margin-bottom: 8px">
                 <input
@@ -347,7 +368,11 @@
               </table>
             </div>
 
-            <div id="view-stations" style="display: none">
+            <div
+              id="view-stations"
+              data-view-section="stations"
+              style="display: none"
+            >
               <h3>Police Stations</h3>
               <div style="display: flex; gap: 8px; margin-bottom: 8px">
                 <input
@@ -386,6 +411,36 @@
     </div>
 
     <script>
+      (function protectApp() {
+        const auth = localStorage.getItem("mp_auth");
+
+        if (!auth) {
+          // Not logged in → kick out
+          window.location.replace("login.html");
+          return;
+        }
+
+        try {
+          const session = JSON.parse(auth);
+
+          // basic sanity check
+          if (!session.user || !session.role) {
+            localStorage.removeItem("mp_auth");
+            window.location.replace("login.html");
+          }
+
+          // Optional: expose session globally
+          window.APP_SESSION = session;
+        } catch (e) {
+          localStorage.removeItem("mp_auth");
+          window.location.replace("login.html");
+        }
+      })();
+
+      document.addEventListener("DOMContentLoaded", () => {
+        applyRoleRestrictions();
+      });
+
       /* ---------- Local data model (localStorage-backed) ---------- */
       const DB = {
         cases: [],
@@ -395,6 +450,20 @@
         suspects: [],
         zones: [],
         stations: [],
+      };
+
+      const ROLE_PERMISSIONS = {
+        Police: [
+          "dashboard",
+          "register",
+          "sightings",
+          "incidents",
+          "reporters",
+          "suspects",
+          "zones",
+          "stations",
+        ],
+        Reporter: ["register", "sightings"],
       };
 
       function saveDB() {
@@ -558,38 +627,24 @@
       );
 
       function showView(view) {
-        // hide all views
-        const leftViews = ["dashboard", "register", "sightings", "incidents"];
-        const rightViews = [
-          "analytics",
-          "reporters",
-          "suspects",
-          "zones",
-          "stations",
-        ];
-        leftViews.forEach((v) => {
-          const el = $(`#view-${v}`);
-          if (el) el.style.display = v === view ? "block" : "none";
-        });
-        rightViews.forEach((v) => {
-          const el = $(`#view-${v}`);
-          if (el) el.style.display = v === view ? "block" : "none";
-        });
-        // if dashboard selected ensure analytics on right
-        if (
-          view === "dashboard" ||
-          view === "register" ||
-          view === "sightings"
-        ) {
-          $all("#panelRight > div").forEach(
-            (d) =>
-              (d.style.display = d.id === "view-analytics" ? "block" : "none")
-          );
+        const role = window.APP_SESSION?.role;
+
+        if (!ROLE_PERMISSIONS[role]?.includes(view)) {
+          alert("Access denied");
+          return;
         }
-        // update header title
-        document.querySelector(".topbar h2").textContent =
-          view.charAt(0).toUpperCase() + view.slice(1);
-        refreshUI();
+
+        document.querySelectorAll("[data-view-section]").forEach((sec) => {
+          sec.style.display = "none";
+        });
+
+        document
+          .querySelector(`[data-view-section="${view}"]`)
+          ?.style.setProperty("display", "block");
+
+        document.querySelectorAll(".nav button").forEach((b) => {
+          b.classList.toggle("active", b.dataset.view === view);
+        });
       }
 
       /* ---------- CRUD operations (local only) ---------- */
@@ -1084,17 +1139,56 @@
         if (e.key === "Escape") closeModal();
       });
 
-      // small helper to open quick register from modal demo
-      document.getElementById("roleSelect").addEventListener("change", (e) => {
-        /* UI could change by role in the future */
-      });
-
       const sidebar = document.querySelector(".sidebar");
       const toggleBtn = document.getElementById("sidebarToggle");
 
       toggleBtn.addEventListener("click", () => {
         sidebar.classList.toggle("collapsed");
       });
+
+      document.getElementById("logoutBtn")?.addEventListener("click", () => {
+        localStorage.removeItem("mp_auth");
+        window.location.replace("login.html");
+      });
+
+      function applyRoleRestrictions() {
+        const role = window.APP_SESSION?.role;
+
+        if (!role || !ROLE_PERMISSIONS[role]) {
+          alert("Invalid role session");
+          localStorage.removeItem("mp_auth");
+          location.replace("login.html");
+          return;
+        }
+
+        // Sidebar buttons
+        document.querySelectorAll(".nav button").forEach((btn) => {
+          const view = btn.dataset.view;
+
+          if (!ROLE_PERMISSIONS[role].includes(view)) {
+            btn.style.display = "none";
+          }
+        });
+
+        // Prevent unauthorized view access
+        document.querySelectorAll("[data-view-section]").forEach((section) => {
+          const view = section.dataset.viewSection;
+
+          if (!ROLE_PERMISSIONS[role].includes(view)) {
+            section.remove();
+          }
+        });
+
+        // Force default view
+        const defaultView = ROLE_PERMISSIONS[role][0];
+        showView(defaultView);
+      }
+
+      document.getElementById("currentRole").textContent =
+        window.APP_SESSION.role;
+
+      document.getElementById("currentRoled").textContent =
+        window.APP_SESSION.role;
     </script>
   </body>
 </html>

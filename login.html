@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Police Department Login</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      * {
+        box-sizing: border-box;
+        font-family: "Inter", sans-serif;
+      }
+
+      body {
+        margin: 0;
+        height: 100vh;
+        background: radial-gradient(circle at top, #1a0000, #000);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+      }
+
+      .login-card {
+        width: 100%;
+        max-width: 420px;
+        background: rgba(30, 0, 0, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+
+      .mark {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #7a0c10, #3b0204);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+      }
+
+      h2 {
+        margin: 0 0 4px;
+      }
+
+      .muted {
+        color: #aaa;
+        font-size: 13px;
+      }
+
+      label {
+        font-size: 13px;
+        color: #ccc;
+        display: block;
+        margin-top: 16px;
+      }
+
+      input,
+      select {
+        width: 100%;
+        margin-top: 6px;
+        padding: 12px;
+        border-radius: 10px;
+        background: #120000;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        outline: none;
+      }
+
+      button {
+        width: 100%;
+        margin-top: 24px;
+        padding: 14px;
+        border-radius: 12px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        background: linear-gradient(135deg, #7a0c10, #3b0204);
+        color: #fff;
+      }
+
+      button:hover {
+        opacity: 0.9;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 16px;
+        font-size: 12px;
+        color: #777;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="login-card">
+      <div class="logo">
+        <div class="mark">PD</div>
+        <div>
+          <h2>Police Department</h2>
+          <div class="muted">Secure Access Portal</div>
+        </div>
+      </div>
+
+      <label>Role</label>
+      <select id="role">
+        <option value="Police">Police Officer</option>
+        <option value="Reporter">Reporter</option>
+      </select>
+
+      <label>Email / Username</label>
+      <input id="username" placeholder="e.g. officer@pd.gov" />
+
+      <label>Password</label>
+      <input id="password" type="password" placeholder="••••••••" />
+
+      <button id="loginBtn">Login</button>
+
+      <div class="footer">Authorized access only</div>
+    </div>
+
+    <script>
+      document.getElementById("loginBtn").addEventListener("click", () => {
+        const role = document.getElementById("role").value;
+        const user = document.getElementById("username").value.trim();
+
+        if (!user) {
+          alert("Enter username");
+          return;
+        }
+
+        // 🔐 TEMP AUTH (stub)
+        localStorage.setItem(
+          "mp_auth",
+          JSON.stringify({
+            user,
+            role,
+            loginAt: new Date().toISOString(),
+          })
+        );
+
+        // Redirect to main app
+        window.location.href = "index.html";
+      });
+    </script>
+  </body>
+</html>
