@@ -368,7 +368,6 @@ header {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--accent);
     padding: 0px;
     margin: 0px;
     gap: 20px;
@@ -376,4 +375,21 @@ header {
 
 .header-txt {
     font-size: small;
+}
+
+.glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px) saturate(200%) brightness(110%);
+    -webkit-backdrop-filter: blur(8px) saturate(200%) brightness(110%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.view {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px) saturate(200%) brightness(110%);
+    -webkit-backdrop-filter: blur(8px) saturate(200%) brightness(110%);
+    margin-bottom: 6px;
+
+
 }

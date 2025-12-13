@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header>
+    <header class="glass">
       <button id="sidebarToggle" class="sidebar-toggle">☰</button>
 
       <h2 class="header-txt">Police Department</h2>
@@ -55,9 +55,7 @@
               border: 1px solid rgba(255, 255, 255, 0.04);
             "
           >
-            <option>Admin</option>
             <option>Police</option>
-            <option>Analyst</option>
             <option>Reporter</option>
           </select>
         </div>
@@ -131,6 +129,18 @@
                     <input type="text" id="rp_age" />
                   </div>
                   <div>
+                    <label>CNIC</label>
+                    <input
+                      type="text"
+                      id="rp_cnic"
+                      name="rp_cnic"
+                      placeholder="XXXXX-XXXXXXX-X"
+                      pattern="^[0-9]{5}-[0-9]{7}-[0-9]$"
+                      title="CNIC must be in the format XXXXX-XXXXXXX-X"
+                      required
+                    />
+                  </div>
+                  <div>
                     <label>Gender</label>
                     <select id="rp_gender">
                       <option>Male</option>
@@ -186,6 +196,22 @@
                   <div>
                     <label>Reporter Name</label>
                     <input type="text" id="sighting_reporter" />
+                  </div>
+                  <div>
+                    <label>Reporter Email</label>
+                    <input type="text" id="sighting_email" />
+                  </div>
+                  <div>
+                    <label>Reporter CNIC</label>
+                    <input
+                      type="text"
+                      id="sighting_cnic"
+                      name="sighting_cnic"
+                      placeholder="XXXXX-XXXXXXX-X"
+                      pattern="^[0-9]{5}-[0-9]{7}-[0-9]$"
+                      title="CNIC must be in the format XXXXX-XXXXXXX-X"
+                      required
+                    />
                   </div>
                   <div>
                     <label>Location</label>
@@ -271,7 +297,7 @@
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th>Phone</th>
+                    <th>CNIC</th>
                     <th>Email</th>
                     <th>Status</th>
                   </tr>
@@ -618,7 +644,7 @@
         <td><span class="badge ${statusClass(c.status)}">${c.status}</span></td>
         <td>${c.zone || ""}</td>
         <td class="table-actions">
-          <button class="btn ghost" data-action="view" data-id="${
+          <button class="btn view" data-action="view" data-id="${
             c.case_id
           }">View</button>
           <button class="btn" data-action="status" data-id="${
@@ -722,9 +748,13 @@
         rt.innerHTML = "";
         DB.reporters.forEach((r) => {
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${r.name}</td><td>${r.phone || ""}</td><td>${
-            r.email || ""
-          }</td><td>${r.status || "Active"}</td>`;
+          tr.innerHTML = `
+  <td>${r.name}</td>
+  <td>${r.cnic || "N/A"}</td>
+  <td>${r.email || "N/A"}</td>
+  <td>${r.status || "Active"}</td>
+`;
+
           rt.appendChild(tr);
         });
         // suspects
@@ -829,7 +859,9 @@
             c.description || ""
           }</p><p><strong>Status:</strong> ${
             c.status
-          }</p></div><div style="width:220px;text-align:right"><button class="btn" id="modalClose">Close</button></div></div>`
+          }</p></div><div style="width:220px;text-align:right"><button class="btn" id="modalClose">Close</button></div></div>
+          <p><strong>CNIC:</strong> ${c.cnic || "N/A"}</p>
+`
         );
         $("#modalClose").onclick = closeModal;
       }
@@ -884,6 +916,7 @@
         const data = {
           name: $("#rp_name").value,
           age: $("#rp_age").value,
+          cnic: $("#rp_cnic").value,
           gender: $("#rp_gender").value,
           last_seen_location: $("#rp_location").value,
           last_seen_date: $("#rp_date").value,
@@ -914,17 +947,46 @@
 
       $("#sightingForm").addEventListener("submit", (e) => {
         e.preventDefault();
+
+        const reporterName = $("#sighting_reporter").value.trim();
+        const reporterEmail = $("#sighting_email").value.trim();
+        const reporterCNIC = $("#sighting_cnic").value.trim();
+
+        if (!reporterName || !reporterCNIC) {
+          alert("Reporter name and CNIC are required");
+          return;
+        }
+
+        // 🔹 Check if reporter already exists (by CNIC)
+        let reporter = DB.reporters.find((r) => r.cnic === reporterCNIC);
+
+        if (!reporter) {
+          reporter = {
+            id: "R-" + Date.now(),
+            name: reporterName,
+            email: reporterEmail,
+            cnic: reporterCNIC,
+            status: "Active",
+          };
+          DB.reporters.push(reporter);
+        }
+
         const s = {
           id: "S-" + Date.now(),
           case_id: $("#sighting_case").value,
-          reporter: $("#sighting_reporter").value,
+          reporter: reporter.name,
+          reporter_cnic: reporter.cnic,
+          reporter_email: reporter.email,
           location: $("#sighting_location").value,
           date: $("#sighting_date").value,
           time: $("#sighting_time").value,
           description: $("#sighting_desc").value,
           status: "Reported",
         };
-        createSighting(s);
+
+        DB.sightings.unshift(s);
+        saveDB();
+
         alert("Sighting reported");
         $("#sightingForm").reset();
         refreshUI();
