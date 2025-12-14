@@ -29,7 +29,7 @@ body {
     overflow: hidden;
     justify-content: center;
     align-items: center;
-    padding: 60px;
+    padding: 40px;
 }
 
 /* Sidebar */
@@ -124,7 +124,7 @@ body {
 }
 
 .card {
-    background: linear-gradient(180deg, var(--glass), var(--glass-2));
+    background: linear-gradient(180deg, var(--maroon), var(--maroon), var(--glass));
     padding: 14px;
     border-radius: 10px;
     min-height: 72px;
@@ -145,9 +145,19 @@ body {
 
 /* Layout: main panels */
 .main-grid {
-    display: grid;
+    /* display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 12px;
+    gap: 12px; */
+    /* display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; */
+    /* flex-wrap: wrap; */
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+
 }
 
 .panel {
@@ -390,6 +400,4 @@ header {
     backdrop-filter: blur(8px) saturate(200%) brightness(110%);
     -webkit-backdrop-filter: blur(8px) saturate(200%) brightness(110%);
     margin-bottom: 6px;
-
-
 }
